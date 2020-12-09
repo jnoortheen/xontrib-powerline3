@@ -3,6 +3,7 @@ import os
 import typing as tp
 import random
 
+import xonsh.lazyasd as xl
 from xonsh.prompt.base import ParsedTokens, _ParsedToken
 from user_xsh.utils import logger
 
@@ -17,9 +18,14 @@ PROMPT_FIELD_COLORS_DEFAULT = {
     "localtime": ("#DAF7A6", "black"),
 }
 
-PROMPT_FIELD_COLORS = builtins.__xonsh__.env.get(
-    "PROMPT_FIELD_COLORS", PROMPT_FIELD_COLORS_DEFAULT
-)
+
+@xl.lazyobject
+def PROMPT_FIELD_COLORS():
+    return builtins.__xonsh__.env.get(
+        "PROMPT_FIELD_COLORS", PROMPT_FIELD_COLORS_DEFAULT
+    )
+
+
 # https://www.nerdfonts.com/cheat-sheet?set=nf-ple-
 modes = {
     "powerline": "",  # \uE0b0
@@ -31,12 +37,13 @@ modes = {
     "ruiny": "",  # \ue0c8
     "lego": "",  # \ue0ce
     "trapezoid": "",  # \ue0d2
-    "honeycomb": "",  # \ue0cc
+    # "honeycomb": "",  # \ue0cc
 }
 
-POWERLINE_MODE = builtins.__xonsh__.env.get(
-    "POWERLINE_MODE", random.choice(list(modes))
-)
+
+@xl.lazyobject
+def POWERLINE_MODE():
+    return builtins.__xonsh__.env.get("POWERLINE_MODE", random.choice(list(modes)))
 
 
 class Section(tp.NamedTuple):
