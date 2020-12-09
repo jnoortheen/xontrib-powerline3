@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "xontrib-powerline3"
+version = "0.1.0"
+description = "Yet another powerline theme for xonsh with async prompt support."
+authors = ["Noortheen Raja NJ <jnoortheen@gmail.com>"]
+
+license = "MIT"
+readme = "README.md"
+
+repository = "https://github.com/jnoortheen/xontrib-powerline3"
+keywords = ['xontrib', 'xonsh']
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: System :: Shells",
+    "Topic :: System :: System Shells",
+    "Topic :: Terminals",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
+
+
+packages = [{ include = "xontrib" }]
+
+[tool.poetry.urls]
+Documentation = "https://github.com/jnoortheen/xontrib-powerline3/blob/master/README.md"
+Code = "https://github.com/jnoortheen/xontrib-powerline3"
+"Issue tracker" = "https://github.com/jnoortheen/xontrib-powerline3/issues"
+
+
+[tool.poetry.dependencies]
+python = ">=3.6"
+xonsh = ">=0.9.20"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.0" 
+black = { version = "^20.8b1", allow-prereleases = true } 
+yapf = "^0.30.0" # can be used to format .xsh files with the special rules
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
