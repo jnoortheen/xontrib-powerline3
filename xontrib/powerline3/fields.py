@@ -10,7 +10,7 @@ XSH_FIELDS["time_format"] = "%I:%M:%S%p"
 
 
 def add_as_field(f):
-    XSH_FIELDS[f.__name__] = full_env_name
+    XSH_FIELDS[f.__name__] = f
 
 
 @add_as_field
