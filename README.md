@@ -40,6 +40,18 @@ $POWERLINE_MODE = "powerline"
 # by default it chooses at radom
 ```
 
+## Extra PROMPT_FIELDS
+
+### 1. `full_env_name`
+
+- When the `env_name` is 
+  - `.venv` show the name of the parent folder
+  - contains `-py3.*` (when it is poetry created) shows the project name part alone
+  
+### 2. `background_jobs`
+- show number of running background jobs
+
+
 ## Examples
 
 ![img.png](docs/img.png)
@@ -53,4 +65,3 @@ This package was created with [xontrib cookiecutter template](https://github.com
 ## Similar Projects
 - https://github.com/vaaaaanquish/xontrib-powerline2
 - https://github.com/santagada/xontrib-powerline
-  
