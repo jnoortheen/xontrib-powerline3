@@ -42,8 +42,8 @@ modes = {
 
 
 @xl.lazyobject
-def POWERLINE_MODE():
-    return builtins.__xonsh__.env.get("POWERLINE_MODE", random.choice(list(modes)))
+def POWERLINE_MODE_DEFAULT():
+    return random.choice(list(modes))
 
 
 class Section(tp.NamedTuple):
@@ -56,7 +56,8 @@ class Section(tp.NamedTuple):
 def prompt_builder(tokens: tp.List[Section], right=False):
     size = len(tokens)
     prompt = []
-    SEP, THIN, PL_RSEP, _ = modes[POWERLINE_MODE]
+    mode = builtins.__xonsh__.env.get("POWERLINE_MODE", POWERLINE_MODE_DEFAULT)
+    SEP, THIN, PL_RSEP, _ = modes[mode]
 
     for i, sec in enumerate(tokens):
         last = i == size - 1

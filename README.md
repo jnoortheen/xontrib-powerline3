@@ -51,6 +51,8 @@ $POWERLINE_MODE = "powerline"
 ### 2. `background_jobs`
 - show number of running background jobs
 
+### 3. py_pkg_info
+- show python package `name-version` if current directory has poetry-pyproject.toml
 
 ## Examples
 

@@ -44,14 +44,34 @@ def background_jobs():
         if task.get("bg"):
             num += 1
 
-    return num if num else None
+    return f'💼{num}' if num else None
+
+
+def deep_get(dictionary, *keys) -> tp.Optional[tp.Any]:
+    """
+    >>> deep_get({"1": {"10": {"100": 200}}}, "1", "10", "100")
+    200
+    """
+    dic = dictionary
+    for ky in keys:
+        if dic is None:
+            return None
+        dic = dic.get(ky)
+    return dic
 
 
 @add_as_field
 def py_pkg_info():
     """Show package name and version if current directory has setup.py or pyproject.toml"""
-    # todo
-    return None
+    py_logo = "\ue73c"  #  - python logo font
+    import tomlkit
+
+    proj = tomlkit.parse(proj_file.read_text())
+
+    proj_name = deep_get(proj, "tool", "poetry", "name")
+    proj_version = deep_get(proj, "tool", "poetry", "version")
+
+    return f"{py_logo} {proj_name}-{proj_version}"
 
 
 @add_as_field
