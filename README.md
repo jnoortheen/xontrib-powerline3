@@ -56,7 +56,7 @@ $POWERLINE_MODE = "powerline"
 
 ## Examples
 
-![img.png](docs/img.png)
+![screenshot.png](docs/screenshot.png)
 
 ## Credits
 
