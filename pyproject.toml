@@ -25,7 +25,10 @@ classifiers = [
 ]
 
 
-packages = [{ include = "xontrib" }]
+packages = [
+    { include = "xontrib" },
+    { include = "xontrib_powerline3" },
+]
 
 [tool.poetry.urls]
 Documentation = "https://github.com/jnoortheen/xontrib-powerline3/blob/master/README.md"
@@ -39,8 +42,8 @@ xonsh = ">=0.9.20"
 tomlkit = "*"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.0" 
-black = { version = "^20.8b1", allow-prereleases = true } 
+pytest = "^6.0"
+black = { version = "^20.8b1", allow-prereleases = true }
 yapf = "^0.30.0" # can be used to format .xsh files with the special rules
 
 [build-system]
