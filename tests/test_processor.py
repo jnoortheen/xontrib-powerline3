@@ -1,6 +1,6 @@
 from xonsh.prompt.base import _ParsedToken
 
-from .processor import split_by_lines, Section
+from xontrib_powerline3.processor import split_by_lines, Section
 
 
 def test_prompt_lines():
