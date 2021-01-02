@@ -25,8 +25,7 @@ xpip install xontrib-powerline3
 ``` bash
 xontrib load powerline3
 
-# update the default set of colors for 
-# the fields by updating the env variable
+# these are the default colors and they are configurable.
 $PROMPT_FIELD_COLORS = {
     "cwd": ("WHITE", "CYAN"),
     "gitstatus": ("WHITE", "BLACK"),
@@ -37,10 +36,30 @@ $PROMPT_FIELD_COLORS = {
 }
 
 # choose the powerline glyph used
-$POWERLINE_MODE = "powerline" 
-# Other choices are 
-# round/down/up/flame/squares/ruiny/lego
-# by default it chooses at radom
+$POWERLINE_MODE = "powerline" # if not set then it will choose random
+  # available modes: round/down/up/flame/squares/ruiny/lego
+
+# define the prompts using the format style and you are good to go
+$PROMPT = "".join(
+    [
+        "{vte_new_tab_cwd}",
+        "{cwd:{}}",
+        "{gitstatus:{}}",
+        "{ret_code}",
+        "{background_jobs}",
+        os.linesep,
+        "{full_env_name: 🐍{}}",
+        "$",
+    ]
+)
+$RIGHT_PROMPT = "".join(
+    (
+        "{long_cmd_duration: ⌛{}}",
+        "{user: 🤖{}}",
+        "{hostname: 🖥{}}",
+        "{localtime: 🕰{}}",
+    )
+)
 ```
 
 ## Extra PROMPT_FIELDS
