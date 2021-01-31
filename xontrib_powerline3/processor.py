@@ -1,11 +1,10 @@
 import builtins
 import os
-import typing as tp
 import random
+import typing as tp
 
 import xonsh.lazyasd as xl
 from xonsh.prompt.base import ParsedTokens, _ParsedToken
-from user_xsh.utils import logger
 
 GRAY = "#273746"
 BLUE = "#004C99"
