@@ -8,12 +8,15 @@ from xonsh.prompt.base import ParsedTokens, _ParsedToken
 
 GRAY = "#273746"
 BLUE = "#004C99"
+GIT_COLOR = "#e94e31"
+LIGHT_GREEN = "#afd700"
 PROMPT_FIELD_COLORS_DEFAULT = {
-    "cwd": ("WHITE", "CYAN"),
-    "gitstatus": ("WHITE", "BLACK"),
-    "ret_code": ("WHITE", "RED"),
-    "full_env_name": ("white", "green"),
-    "hostname": ("white", BLUE),
+    "cwd": ("INTENSE_WHITE", "CYAN"),
+    "gitstatus": ("INTENSE_WHITE", "BLACK"),
+    "gitstatus_pl": ("INTENSE_WHITE", GIT_COLOR),
+    "ret_code": ("INTENSE_WHITE", "RED"),
+    "full_env_name": ("INTENSE_WHITE", LIGHT_GREEN),
+    "hostname": ("INTENSE_WHITE", BLUE),
     "localtime": ("#DAF7A6", "black"),
 }
 
@@ -36,12 +39,12 @@ modes = {
     "ruiny": "",  # \ue0c8
     "lego": "",  # \ue0ce
     "trapezoid": "",  # \ue0d2
-    # "honeycomb": "",  # \ue0cc
+    "honeycomb": "",  # \ue0cc
 }
 
 
 @xl.lazyobject
-def POWERLINE_MODE_DEFAULT():
+def _POWERLINE_MODE_DEFAULT():
     return random.choice(list(modes))
 
 
@@ -52,14 +55,43 @@ class Section(tp.NamedTuple):
     bg: str = ""
 
 
-def prompt_builder(tokens: tp.List[Section], right=False):
-    size = len(tokens)
-    prompt = []
-    mode = builtins.__xonsh__.env.get("POWERLINE_MODE", POWERLINE_MODE_DEFAULT)
-    SEP, THIN, PL_RSEP, _ = modes[mode]
+def _build_left_section(
+    sec: Section,
+    first: bool,
+    tok_value: str,
+    SEP: str,
+    next_sec: tp.Optional[Section],
+) -> tp.Iterator[str]:
+    if first:
+        if sec.bg:
+            yield "{BACKGROUND_%s}" % sec.bg
+    if sec.fg:
+        yield "{%s}" % sec.fg
+
+    yield tok_value
+    if next_sec is None:
+        yield "{RESET}"
+        if sec.bg:
+            yield "{%s}" % sec.bg
+        yield "%s{RESET}" % SEP
+    else:
+        if next_sec.bg:
+            yield "{BACKGROUND_%s}" % next_sec.bg
+        if sec.bg:
+            yield "{%s}" % sec.bg
+        yield SEP
+
+
+@xl.lazyobject
+def POWERLINE_SYMBOLS():
+    mode = builtins.__xonsh__.env.get("POWERLINE_MODE", _POWERLINE_MODE_DEFAULT)
+    return modes[mode]
+
+
+def _prompt_builder(tokens: tp.List[Section], right=False):
+    SEP, THIN, PL_RSEP, _ = POWERLINE_SYMBOLS
 
     for i, sec in enumerate(tokens):
-        last = i == size - 1
         first = i == 0
 
         tok_value = sec.line
@@ -67,30 +99,21 @@ def prompt_builder(tokens: tp.List[Section], right=False):
             tok_value = tok_value.replace(os.sep, THIN)
 
         if right:
-            prompt.append(
-                "{%s}%s{BACKGROUND_%s}{%s}%s"
-                % (sec.bg, PL_RSEP, sec.bg, sec.fg, tok_value)
+            yield "{%s}%s{BACKGROUND_%s}{%s}%s" % (
+                sec.bg,
+                PL_RSEP,
+                sec.bg,
+                sec.fg,
+                tok_value,
             )
-        else:
-            if first:
-                if sec.bg:
-                    prompt.append("{BACKGROUND_%s}" % sec.bg)
-            if sec.fg:
-                prompt.append("{%s}" % sec.fg)
 
-            prompt.append(tok_value)
-            if last:
-                prompt.append("{RESET}")
-                if sec.bg:
-                    prompt.append("{%s}" % sec.bg)
-                prompt.append("%s{RESET}" % SEP)
-            else:
-                if tokens[i + 1].bg:
-                    prompt.append("{BACKGROUND_%s}" % tokens[i + 1].bg)
-                if sec.bg:
-                    prompt.append("{%s}" % sec.bg)
-                prompt.append(SEP)
-    return "".join(prompt)
+        else:
+            next_sec = tokens[i + 1] if i < len(tokens) - 1 else None
+            yield from _build_left_section(sec, first, tok_value, SEP, next_sec)
+
+
+def prompt_builder(tokens: tp.List[Section], right=False):
+    return "".join(_prompt_builder(tokens, right))
 
 
 def create_sections(tokens: tp.List[_ParsedToken]):
@@ -124,7 +147,6 @@ def process_prompt_tokens(container: ParsedTokens) -> str:
                 for line in split_by_lines(container.tokens)
             ]
         )
-
     # for title
     return "".join([c.value for c in container.tokens])
 

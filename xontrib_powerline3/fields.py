@@ -44,7 +44,7 @@ def background_jobs():
         if task.get("bg"):
             num += 1
 
-    return f'💼{num}' if num else None
+    return f"💼{num}" if num else None
 
 
 def deep_get(dictionary, *keys) -> tp.Optional[tp.Any]:
@@ -66,6 +66,7 @@ def py_pkg_info():
     py_logo = "\ue73c"  #  - python logo font
     import tomlkit
 
+    # todo
     proj = tomlkit.parse(proj_file.read_text())
 
     proj_name = deep_get(proj, "tool", "poetry", "name")
@@ -81,3 +82,29 @@ def os_icon():
 
     # todo
     return None
+
+
+@add_as_field
+def user_at_host():
+    return XSH_FIELDS["user"] + "@" + XSH_FIELDS["hostname"]
+
+
+@add_as_field
+def gitstatus_pl():
+    """gitstatus prompt with powerline separtors"""
+
+    # '{CYAN}main{RESET}|{BLUE}+21{RESET}{RED}-5{RESET}…3{RESET}'
+    status: str = XSH_FIELDS["gitstatus"]()
+
+    if status:
+        from xontrib_powerline3.processor import POWERLINE_SYMBOLS
+
+        SEP, THIN, PL_RSEP, _ = POWERLINE_SYMBOLS
+        parts = []
+        for p in status.split("{RESET}"):
+            if p:
+                part = p.lstrip("|")
+                if "}" in part:
+                    part = part.split("}")[1]
+                parts.append(part)
+        return THIN.join(parts)
