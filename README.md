@@ -23,7 +23,7 @@ xpip install xontrib-powerline3
 ## Usage
 
 ``` bash
-xontrib load powerline3
+xontrib load powerline3 prompt_ret_code
 
 # these are the default colors and they are configurable.
 $PROMPT_FIELD_COLORS = {
@@ -66,8 +66,8 @@ $RIGHT_PROMPT = "".join(
 
 ### 1. `full_env_name`
 
-- When the `env_name` is 
-  - `.venv` show the name of the parent folder
+- When the `env_name` 
+  - is `.venv` show the name of the parent folder
   - contains `-py3.*` (when it is poetry created) shows the project name part alone
   
 ### 2. `background_jobs`
