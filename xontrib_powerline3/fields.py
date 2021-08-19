@@ -86,25 +86,41 @@ def os_icon():
 
 @add_as_field
 def user_at_host():
-    return XSH_FIELDS["user"] + "@" + XSH_FIELDS["hostname"]
+    return XSH_FIELDS["user"] + "✸" + XSH_FIELDS["hostname"]
 
 
 @add_as_field
 def gitstatus_pl():
     """gitstatus prompt with powerline separtors"""
+    from xonsh.prompt.gitstatus import get_gitstatus_fields, _DEFS, _is_hidden, _get_def
+    from xontrib_powerline3.processor import POWERLINE_SYMBOLS
 
-    # '{CYAN}main{RESET}|{BLUE}+21{RESET}{RED}-5{RESET}…3{RESET}'
-    status: str = XSH_FIELDS["gitstatus"]()
+    fields = get_gitstatus_fields()
+    if fields is None:
+        return None
 
-    if status:
-        from xontrib_powerline3.processor import POWERLINE_SYMBOLS
+    def get_def(attr) -> str:
+        symbol = _get_def(attr) or ""
+        if "}" in symbol:  # strip color
+            symbol = symbol.split("}")[1]
+        return symbol
 
-        SEP, THIN, PL_RSEP, _ = POWERLINE_SYMBOLS
-        parts = []
-        for p in status.split("{RESET}"):
-            if p:
-                part = p.lstrip("|")
-                if "}" in part:
-                    part = part.split("}")[1]
-                parts.append(part)
-        return THIN.join(parts)
+    def gather_group(*flds):
+        for fld in flds:
+            if not _is_hidden(fld):
+                val = fields[fld]
+                if not val:
+                    continue
+                yield get_def(fld) + str(val)
+
+    groups = (
+        (_DEFS.BRANCH, _DEFS.AHEAD, _DEFS.BEHIND, _DEFS.OPERATION),
+        (_DEFS.STAGED, _DEFS.CONFLICTS),
+        (_DEFS.CHANGED, _DEFS.DELETED),
+        (_DEFS.UNTRACKED, _DEFS.STASHED),
+        (_DEFS.LINES_ADDED, _DEFS.LINES_REMOVED),
+    )
+    parts = ("".join(gather_group(*grp)) for grp in groups)
+
+    _, THIN, _, _ = POWERLINE_SYMBOLS
+    return THIN.join((p for p in parts if p))
