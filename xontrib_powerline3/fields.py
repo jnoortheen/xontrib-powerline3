@@ -114,7 +114,9 @@ def gitstatus_pl():
                 yield get_def(fld) + str(val)
 
     groups = (
-        (_DEFS.BRANCH, _DEFS.AHEAD, _DEFS.BEHIND, _DEFS.OPERATION),
+        (_DEFS.BRANCH, ),
+        (_DEFS.OPERATION, ),
+        (_DEFS.AHEAD, _DEFS.BEHIND),
         (_DEFS.STAGED, _DEFS.CONFLICTS),
         (_DEFS.CHANGED, _DEFS.DELETED),
         (_DEFS.UNTRACKED, _DEFS.STASHED),
