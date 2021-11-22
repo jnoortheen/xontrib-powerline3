@@ -22,7 +22,7 @@ xpip install xontrib-powerline3
 
 ## Usage
 
-``` bash
+``` xsh
 xontrib load powerline3 prompt_ret_code
 
 # the foreground/background colors of the prompt-fields can be configured as below. This works for custom fields as well
