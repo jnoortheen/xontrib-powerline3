@@ -169,7 +169,7 @@ def prompt_end():
         return_code = XSH.history.rtns[-1]
         if return_code != 0:
             color = Colors.RED
-    return "{%s}%s " % (color, prompt)
+    return "{%s}%s{RESET} " % (color, prompt)
 
 
 @add_pl_field
