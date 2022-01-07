@@ -25,19 +25,15 @@ xpip install xontrib-powerline3
 ``` xsh
 xontrib load powerline3 prompt_ret_code
 
-# the foreground/background colors of the prompt-fields can be configured as below. This works for custom fields as well
-$PROMPT_FIELD_COLORS = {
-    "cwd": ("WHITE", "CYAN"),
-    "gitstatus": ("WHITE", "BLACK"),
-    "ret_code": ("WHITE", "RED"),
-    "full_env_name": ("WHITE", "green"),
-    "hostname": ("WHITE", "BLUE"),
-    "localtime": ("#DAF7A6", "BLACK"),
-}
+# the foreground/background colors of the prompt-fields can be configured as below. 
+# This works for custom fields as well
+# The format is `<prompt-field-name>__pl_colors`. It can be a function returning `tuple[str, str]`
+# or set tuples directly as below.
+$PROMPT_FIELDS["cwd__pl_colors"] = ("WHITE", "CYAN")
 
 # choose the powerline glyph used
 $POWERLINE_MODE = "powerline" # if not set then it will choose random
-  # available modes: round/down/up/flame/squares/ruiny/lego
+# available modes: round/down/up/flame/squares/ruiny/lego
 
 # define the prompts using the format style and you are good to go
 $PROMPT = "".join(
@@ -73,8 +69,6 @@ $RIGHT_PROMPT = "".join(
 ### 2. `background_jobs`
 - show number of running background jobs
 
-### 3. `py_pkg_info`
-- show python package `name-version` if current directory has poetry-pyproject.toml
 
 ## Examples
 
