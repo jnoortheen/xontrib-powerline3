@@ -108,6 +108,8 @@ def render_prompt_lines(tokens, is_right=False):
         def fill_sections():
             prev = ""
             for tok in reversed(line_toks):
+                if not tok.value:
+                    continue
                 fg, bg = list(map(str.upper, get_pl_colors(tok.field)))
                 yield Section(tok.value, fg, bg, pl_color=prev)
                 prev = bg
