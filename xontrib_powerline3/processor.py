@@ -1,31 +1,11 @@
-import builtins
+import functools
+
 import os
 import random
 import typing as tp
 
-import xonsh.lazyasd as xl
 from xonsh.prompt.base import ParsedTokens, _ParsedToken
-
-GRAY = "#273746"
-BLUE = "#004C99"
-GIT_COLOR = "#e94e31"
-LIGHT_GREEN = "#afd700"
-PROMPT_FIELD_COLORS_DEFAULT = {
-    "cwd": ("INTENSE_WHITE", "CYAN"),
-    "gitstatus": ("INTENSE_WHITE", "BLACK"),
-    "gitstatus_pl": ("INTENSE_WHITE", GIT_COLOR),
-    "ret_code": ("INTENSE_WHITE", "RED"),
-    "full_env_name": ("INTENSE_WHITE", LIGHT_GREEN),
-    "hostname": ("INTENSE_WHITE", BLUE),
-    "localtime": ("#DAF7A6", "black"),
-}
-
-
-@xl.lazyobject
-def PROMPT_FIELD_COLORS():
-    return builtins.__xonsh__.env.get(
-        "PROMPT_FIELD_COLORS", PROMPT_FIELD_COLORS_DEFAULT
-    )
+from xonsh.built_ins import XSH
 
 
 # https://www.nerdfonts.com/cheat-sheet?set=nf-ple-
@@ -43,14 +23,14 @@ modes = {
 }
 
 
-@xl.lazyobject
-def _POWERLINE_MODE_DEFAULT():
+@functools.lru_cache(None)
+def get_a_powerline_mode():
     return random.choice(list(modes))
 
 
 class Section(tp.NamedTuple):
     line: str
-    field: tp.Optional[str]
+    field: "str|None" = None
     fg: str = ""
     bg: str = ""
 
@@ -82,26 +62,30 @@ def _build_left_section(
         yield SEP
 
 
-@xl.lazyobject
-def POWERLINE_SYMBOLS():
-    mode = builtins.__xonsh__.env.get("POWERLINE_MODE", _POWERLINE_MODE_DEFAULT)
-    return modes[mode]
+@functools.lru_cache(None)
+def get_pl_symbols() -> "tuple[str, str, str]":
+    mode = XSH.env.get("POWERLINE_MODE", get_a_powerline_mode())
+    return modes[mode][:3]
+
+
+def thin_join(parts):
+    _, THIN, _ = get_pl_symbols()
+
+    return THIN.join(parts)
 
 
 def _prompt_builder(tokens: tp.List[Section], right=False):
-    SEP, THIN, PL_RSEP, _ = POWERLINE_SYMBOLS
+    SEP, THIN, RSEP = get_pl_symbols()
 
     for i, sec in enumerate(tokens):
         first = i == 0
 
         tok_value = sec.line
-        if sec.field == "cwd":
-            tok_value = tok_value.replace(os.sep, THIN)
 
         if right:
             yield "{%s}%s{BACKGROUND_%s}{%s}%s" % (
                 sec.bg,
-                PL_RSEP,
+                RSEP,
                 sec.bg,
                 sec.fg,
                 tok_value,
@@ -117,10 +101,12 @@ def prompt_builder(tokens: tp.List[Section], right=False):
 
 
 def create_sections(tokens: tp.List[_ParsedToken]):
+    from xontrib_powerline3.fields import get_pl_colors
+
     for tok in tokens:
         if not tok.value:  # skip empty strings
             continue
-        args = PROMPT_FIELD_COLORS.get(tok.field, ("white", GRAY))
+        args = get_pl_colors(tok.field)
         yield Section(tok.value, tok.field, *[a.upper() for a in args])
 
 
@@ -136,10 +122,9 @@ def split_by_lines(tokens: tp.List[_ParsedToken]):
 
 
 def process_prompt_tokens(container: ParsedTokens) -> str:
-    prompt = builtins.__xonsh__.env["PROMPT"]
-    rprompt = builtins.__xonsh__.env["RIGHT_PROMPT"]
+    prompt = XSH.env["PROMPT"]
+    rprompt = XSH.env["RIGHT_PROMPT"]
     if container.template in {prompt, rprompt}:
-        # it is $PROMPT
         is_right = container.template == rprompt
         return os.linesep.join(
             [
@@ -149,6 +134,3 @@ def process_prompt_tokens(container: ParsedTokens) -> str:
         )
     # for title
     return "".join([c.value for c in container.tokens])
-
-
-builtins.__xonsh__.env["PROMPT_TOKENS_FORMATTER"] = process_prompt_tokens
