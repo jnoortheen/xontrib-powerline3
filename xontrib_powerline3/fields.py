@@ -48,7 +48,7 @@ def add_pl_colors(name: str, bg: str, color: "str|None" = None):
     XSH_FIELDS[f"{name}__pl_colors"] = colors
 
 
-def get_pl_colors(name: str):
+def get_pl_colors(name: "str|None"):
     if not name:
         return "", ""
     fld = XSH_FIELDS.get(f"{name}__pl_colors")
@@ -169,7 +169,7 @@ def prompt_end():
         return_code = XSH.history.rtns[-1]
         if return_code != 0:
             color = Colors.RED
-    return "{%s}%s" % (color, prompt)
+    return "{%s}%s " % (color, prompt)
 
 
 @add_pl_field
