@@ -5,6 +5,7 @@ class Colors:
     """some named color codes"""
 
     # taken from - https://www.w3schools.com/colors/colors_trends.asp
+    CYAN = "CYAN"
     GREEN = "#88B04B"  # light green
     EMERALD = "#009B77"  # greenish
     GRAY = "#181818"

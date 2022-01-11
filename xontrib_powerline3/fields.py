@@ -5,8 +5,8 @@ from pathlib import Path
 
 from xonsh.built_ins import XSH
 import xonsh.tools as xt
-from xontrib_powerline3.colors import Colors, get_contrast_color
-from xontrib_powerline3.processor import thin_join
+from .colors import Colors, get_contrast_color
+from .processor import thin_join
 
 env = XSH.env
 XSH_FIELDS = env["PROMPT_FIELDS"]
@@ -48,17 +48,6 @@ def add_pl_colors(name: str, bg: str, color: "str|None" = None):
     XSH_FIELDS[f"{name}__pl_colors"] = colors
 
 
-def get_pl_colors(name: "str|None"):
-    if not name:
-        return "", ""
-    fld = XSH_FIELDS.get(f"{name}__pl_colors")
-    if fld:
-        val = fld() if callable(fld) else fld
-        return val
-    # default colors
-    return "white", Colors.GRAY
-
-
 def add_default_prompt_colors():
     """add colors for the default prompt-fields"""
     for defs in [
@@ -68,17 +57,15 @@ def add_default_prompt_colors():
         ("env_name", Colors.EMERALD),
         ("current_job", Colors.ROSE),
         ("prompt_end", ""),
+        ("cwd", Colors.CYAN),
     ]:
         add_pl_colors(*defs)
 
 
-@add_pl_field
-def cwd():
-    """`cwd` powerline version"""
-    from xonsh.prompt.cwd import _dynamically_collapsed_pwd
-
-    pwd = _dynamically_collapsed_pwd()
-    return thin_join(pwd.split(os.sep)), "CYAN"
+@add_field
+def cwd__pl_sep(val):
+    """`cwd` thin separator"""
+    return thin_join(val.split(os.sep))
 
 
 @add_pl_field

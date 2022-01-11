@@ -8,6 +8,7 @@ import typing as tp
 
 from xonsh.prompt.base import ParsedTokens, _ParsedToken
 from xonsh.built_ins import XSH
+from .colors import Colors
 
 
 # https://www.nerdfonts.com/cheat-sheet?set=nf-ple-
@@ -23,6 +24,9 @@ modes = {
     "trapezoid": "",  # \ue0d2
     "honeycomb": "",  # \ue0cc
 }
+
+
+XSH_FIELDS = XSH.env["PROMPT_FIELDS"]
 
 
 @functools.lru_cache(None)
@@ -98,9 +102,25 @@ def split_by_lines(tokens: tp.List[_ParsedToken]):
     yield line_toks
 
 
-def render_prompt_lines(tokens, is_right=False):
-    from xontrib_powerline3.fields import get_pl_colors
+def get_pl_colors(name: "str|None"):
+    if not name:
+        return "", ""
+    calbak = XSH_FIELDS.get(f"{name}__pl_colors")
+    if calbak:
+        val = calbak() if callable(calbak) else calbak
+        return val
+    # default colors
+    return "white", Colors.GRAY
 
+
+def separate_for_pl(name, val):
+    calbak = XSH_FIELDS.get(f"{name}__pl_sep")
+    if calbak and callable(calbak):
+        return calbak(val)
+    return val
+
+
+def render_prompt_lines(tokens, is_right=False):
     sep, _, rsep = get_pl_symbols()
 
     for line_toks in split_by_lines(tokens):
@@ -111,7 +131,11 @@ def render_prompt_lines(tokens, is_right=False):
                 if not tok.value:
                     continue
                 fg, bg = list(map(str.upper, get_pl_colors(tok.field)))
-                yield Section(tok.value, fg, bg, pl_color=prev)
+                val = tok.value
+                if tok.field:
+                    # small processor before showing
+                    val = separate_for_pl(tok.field, val)
+                yield Section(val, fg, bg, pl_color=prev)
                 prev = bg
 
         sects = list(fill_sections())
