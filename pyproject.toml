@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "xontrib-powerline3"
-version = "0.3.13"
+version = "0.3.14"
 description = "Yet another powerline theme for xonsh with async prompt support."
 authors = ["Noortheen Raja NJ <jnoortheen@gmail.com>"]
 
