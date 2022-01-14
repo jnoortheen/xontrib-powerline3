@@ -78,10 +78,10 @@ def full_env_name():
     if env_name:
         venv_path = Path(env.get("VIRTUAL_ENV"))
         if venv_path.name == ".venv":
-            return venv_path.parent.name
+            env_name = venv_path.parent.name
         if "-py" in env_name:  # probably a poetry venv
-            name = venv_path.name.rsplit("-", 2)[0]
-            return name, Colors.EMERALD
+            env_name = venv_path.name.rsplit("-", 2)[0]
+        return env_name, Colors.EMERALD
 
 
 def _background_jobs():
