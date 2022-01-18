@@ -4,7 +4,7 @@ import xontrib_powerline3.fields as xpf
 
 # load defaults
 def main():
-    xpf.add_default_prompt_colors()
+    xpf.set__pl_defaults()
     XSH.env["PROMPT_TOKENS_FORMATTER"] = xpp.process_prompt_tokens
 
 

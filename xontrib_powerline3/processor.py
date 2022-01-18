@@ -26,10 +26,17 @@ modes = {
 }
 
 
+class PlMode(tp.NamedTuple):
+    sep: str
+    thin: str
+    rsep: str
+    rthin: str
+
+
 XSH_FIELDS = XSH.env["PROMPT_FIELDS"]
 
 
-@functools.lru_cache(None)
+@functools.lru_cache
 def get_a_powerline_mode():
     return random.choice(list(modes))
 
@@ -42,16 +49,19 @@ class Section:
     pl_color: str = ""
 
 
-@functools.lru_cache(None)
-def get_pl_symbols() -> "tuple[str, str, str]":
-    mode = XSH.env.get("POWERLINE_MODE", get_a_powerline_mode())
-    return modes[mode][:3]
+@functools.lru_cache
+def get_pl_symbols() -> "PlMode":
+    default = get_a_powerline_mode()
+    mode = XSH.env.get("POWERLINE_MODE", default)
+    symbols = modes.get(mode) or mode[default]
+    return PlMode(*symbols)
 
 
-def thin_join(parts):
-    _, THIN, _ = get_pl_symbols()
-
-    return THIN.join(parts)
+def thin_join(parts, is_right=False):
+    pl = get_pl_symbols()
+    if is_right:
+        return pl.rthin.join(parts)
+    return pl.thin.join(parts)
 
 
 def format_right_prompt(sections: tp.List[Section], sep: str):
@@ -113,15 +123,22 @@ def get_pl_colors(name: "str|None"):
     return "white", Colors.GRAY
 
 
-def separate_for_pl(name, val):
-    calbak = XSH_FIELDS.get(f"{name}__pl_sep")
-    if calbak and callable(calbak):
-        return calbak(val)
+def separate_for_pl(name, val, is_right=False):
+    pl = get_pl_symbols()
+    sep_cal = XSH_FIELDS.get(f"{name}__pl_sep")
+    if sep_cal:
+        if callable(sep_cal):
+            sep = sep_cal(val)
+        else:
+            sep = sep_cal
+
+        thin = pl.rthin if is_right else pl.thin
+        return val.replace(sep, thin)
     return val
 
 
 def render_prompt_lines(tokens, is_right=False):
-    sep, _, rsep = get_pl_symbols()
+    pl = get_pl_symbols()
 
     for line_toks in split_by_lines(tokens):
 
@@ -134,7 +151,7 @@ def render_prompt_lines(tokens, is_right=False):
                 val = tok.value
                 if tok.field:
                     # small processor before showing
-                    val = separate_for_pl(tok.field, val)
+                    val = separate_for_pl(tok.field, val, is_right)
                 yield Section(val, fg, bg, pl_color=prev)
                 prev = bg
 
@@ -142,9 +159,9 @@ def render_prompt_lines(tokens, is_right=False):
         sects.reverse()
 
         if is_right:
-            parts = format_right_prompt(sects, rsep)
+            parts = format_right_prompt(sects, pl.rsep)
         else:
-            parts = format_prompt(sects, sep)
+            parts = format_prompt(sects, pl.sep)
         yield "".join(parts)
 
 

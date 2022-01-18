@@ -1,16 +1,22 @@
 import functools
 import os
+import re
 import typing as tp
 from pathlib import Path
 
-from xonsh.built_ins import XSH
 import xonsh.tools as xt
+from xonsh.built_ins import XSH
 from .colors import Colors, get_contrast_color
-from .processor import thin_join
 
 env = XSH.env
 XSH_FIELDS = env["PROMPT_FIELDS"]
 XSH_FIELDS["time_format"] = "%I:%M:%S%p"
+
+
+class RichField(tp.NamedTuple):
+    value: str
+    fg: str
+    sep: "str|None" = None
 
 
 def add_pl_field(fn):
@@ -21,10 +27,11 @@ def add_pl_field(fn):
     def wrapped():
         result = fn()
         # if it is tuple then it contains color info as well
-        if isinstance(result, tuple) and (1 < len(result) < 4):
-            value = result[0]
-            colors = result[1:]
-            add_pl_colors(fld_name, *colors)
+        if isinstance(result, RichField):
+            value = result.value
+            add_pl_colors(fld_name, result.fg)
+            if result.sep:
+                add_pl_sep(fld_name, result.sep)
         else:
             value = result
         return value
@@ -48,8 +55,13 @@ def add_pl_colors(name: str, bg: str, color: "str|None" = None):
     XSH_FIELDS[f"{name}__pl_colors"] = colors
 
 
-def add_default_prompt_colors():
-    """add colors for the default prompt-fields"""
+def add_pl_sep(name: str, sep: str):
+    """for the prompt field thin separator"""
+    XSH_FIELDS[f"{name}__pl_sep"] = sep
+
+
+def set__pl_defaults():
+    """add colors/sep for the default prompt-fields"""
     for defs in [
         ("user", Colors.SAND),
         ("hostname", Colors.BLUE),
@@ -58,14 +70,21 @@ def add_default_prompt_colors():
         ("current_job", Colors.ROSE),
         ("prompt_end", ""),
         ("cwd", Colors.CYAN),
+        ("env_name", Colors.EMERALD),
+        ("full_env_name", Colors.EMERALD),
     ]:
         add_pl_colors(*defs)
 
+    for fld, sep in [
+        ("cwd", os.sep),
+    ]:
+        add_pl_sep(fld, sep)
 
-@add_field
-def cwd__pl_sep(val):
-    """`cwd` thin separator"""
-    return thin_join(val.split(os.sep))
+
+@functools.lru_cache
+def poetry_env_naming():
+    # if using poetry's venv naming scheme like <venv-name>-<hash>-py<ver>
+    return re.compile(r"(?P<name>\S+)-\w+-py(?P<version>[\d.]+)")
 
 
 @add_pl_field
@@ -75,13 +94,19 @@ def full_env_name():
     - contains `-py3.*` (when it is poetry created) shows the project name part alone
     """
     env_name: str = XSH_FIELDS["env_name"]()
-    if env_name:
-        venv_path = Path(env.get("VIRTUAL_ENV"))
-        if venv_path.name == ".venv":
-            env_name = venv_path.parent.name
-        if "-py" in env_name:  # probably a poetry venv
-            env_name = venv_path.name.rsplit("-", 2)[0]
-        return env_name, Colors.EMERALD
+    if not env_name:
+        return
+
+    venv_path = Path(env.get("VIRTUAL_ENV"))
+    if venv_path.name == ".venv":
+        env_name = venv_path.parent.name
+
+    sep = "\0"
+    if match := poetry_env_naming().match(venv_path.name):
+        name, version = match.groups()
+        env_name = sep.join([name, version])
+
+    return RichField(env_name, Colors.EMERALD, sep)
 
 
 def _background_jobs():
@@ -95,7 +120,7 @@ def background_jobs():
     """Show number of background jobs"""
     jobs = _background_jobs()
     if jobs:
-        return _background_jobs(), Colors.SERENE
+        return RichField(_background_jobs(), Colors.SERENE)
 
 
 def deep_get(dictionary, *keys) -> tp.Optional[tp.Any]:
@@ -136,7 +161,8 @@ def deep_get(dictionary, *keys) -> tp.Optional[tp.Any]:
 
 @add_pl_field
 def user_at_host():
-    return XSH_FIELDS["user"] + "✸" + XSH_FIELDS["hostname"], Colors.VIOLET
+    val = XSH_FIELDS["user"] + "✸" + XSH_FIELDS["hostname"]
+    return RichField(val, Colors.VIOLET)
 
 
 @add_pl_field
@@ -144,7 +170,7 @@ def ret_code():
     if XSH.history.rtns:
         return_code = XSH.history.rtns[-1]
         if return_code != 0:
-            return f"[{return_code}]", Colors.RED
+            return RichField(f"[{return_code}]", Colors.RED)
 
 
 @add_field
@@ -206,4 +232,5 @@ def gitstatus():
 
         return Colors.GREEN  # clean
 
-    return thin_join(get_parts()), get_color()
+    sep = "\0"
+    return RichField(sep.join(get_parts()), get_color(), sep)
