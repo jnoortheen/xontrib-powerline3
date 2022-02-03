@@ -1,9 +1,6 @@
 # Powerline3
 Yet another powerline theme for xonsh with async prompt support. 
 
-# Note: 
-This depends on xonsh's unreleased version (master branch will work. or in future >0.9.24)
-
 ## Why another one?
 
 - It uses `$PROMPT_FIELDS` and no need to have a separate functions and renderer. 
