@@ -19,16 +19,11 @@ classifiers = [
     "Topic :: Terminals",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
 ]
 
 
-packages = [
-    { include = "xontrib" },
-    { include = "xontrib_powerline3" },
-]
+packages = [{ include = "xontrib" }, { include = "xontrib_powerline3" }]
 
 [tool.poetry.urls]
 Documentation = "https://github.com/jnoortheen/xontrib-powerline3/blob/master/README.md"
@@ -43,8 +38,7 @@ tomlkit = "*"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0"
-black = { version = "^20.8b1", allow-prereleases = true }
-yapf = "^0.30.0" # can be used to format .xsh files with the special rules
+black = "*"
 
 [build-system]
 requires = ["poetry>=0.12"]
