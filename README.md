@@ -1,5 +1,5 @@
 # Powerline3
-Yet another powerline theme for xonsh with async prompt support. 
+Yet another powerline like prompt for xonsh with async prompt support. 
 
 ## Why another one?
 
