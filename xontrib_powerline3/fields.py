@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import os
 import re
@@ -9,8 +10,8 @@ from xonsh.built_ins import XSH
 from .colors import Colors, get_contrast_color
 
 env = XSH.env
-XSH_FIELDS = env["PROMPT_FIELDS"]
-XSH_FIELDS["time_format"] = "%I:%M:%S%p"
+FLDS = env["PROMPT_FIELDS"]
+FLDS["time_format"] = "%I:%M:%S%p"
 
 
 class RichField(tp.NamedTuple):
@@ -36,12 +37,12 @@ def add_pl_field(fn):
             value = result
         return value
 
-    XSH_FIELDS[fld_name] = wrapped
+    FLDS[fld_name] = wrapped
     return wrapped
 
 
 def add_field(fn):
-    XSH_FIELDS[fn.__name__] = fn
+    FLDS[fn.__name__] = fn
     return fn
 
 
@@ -52,12 +53,12 @@ def add_pl_colors(name: str, bg: str, color: "str|None" = None):
         colors = (color, bg)
     else:
         colors = ("", "")  # no need to add colors. eg. prompt_end
-    XSH_FIELDS[f"{name}__pl_colors"] = colors
+    FLDS[f"{name}__pl_colors"] = colors
 
 
 def add_pl_sep(name: str, sep: str):
     """for the prompt field thin separator"""
-    XSH_FIELDS[f"{name}__pl_sep"] = sep
+    FLDS[f"{name}__pl_sep"] = sep
 
 
 def set__pl_defaults():
@@ -93,7 +94,7 @@ def full_env_name():
     - `.venv` show the name of the parent folder
     - contains `-py3.*` (when it is poetry created) shows the project name part alone
     """
-    env_name: str = XSH_FIELDS["env_name"]()
+    env_name: str = FLDS["env_name"]()
     if not env_name:
         return
 
@@ -161,7 +162,7 @@ def deep_get(dictionary, *keys) -> tp.Optional[tp.Any]:
 
 @add_pl_field
 def user_at_host():
-    val = XSH_FIELDS["user"] + "✸" + XSH_FIELDS["hostname"]
+    val = FLDS["user"] + "✸" + FLDS["hostname"]
     return RichField(val, Colors.VIOLET)
 
 
@@ -188,45 +189,53 @@ def prompt_end():
 @add_pl_field
 def gitstatus():
     """powerline version of gitstatus prompt-field from Xonsh"""
-    from xonsh.prompt.gitstatus import get_gitstatus_fields, _DEFS, _is_hidden, _get_def
+    from xonsh.prompt import gitstatus as gs
 
-    fields = get_gitstatus_fields()
-    if fields is None:
+    try:
+        gs_dir = FLDS.pick("gs_dir")
+    except Exception:
+        gs_dir = None
+
+    if not gs_dir:
         return None
 
-    def get_def(attr) -> str:
-        symbol = _get_def(attr) or ""
-        if "}" in symbol:  # strip color
+    fields = set(gs.gitstatus.get_frags(XSH.env))
+
+    def strip_color(symbol: str) -> str:
+        if "}" in symbol:
             symbol = symbol.split("}")[1]
         return symbol
 
     def gather_group(*flds):
         for fld in flds:
-            if not _is_hidden(fld):
-                val = fields[fld]
-                if not val:
-                    continue
-                yield get_def(fld) + str(val)
+            if fld.name not in fields:
+                continue
+            val = FLDS.pick(fld)
+
+            if not val:
+                continue
+
+            yield strip_color(val.prefix) + format(val.value) + strip_color(val.suffix)
 
     def get_parts():
         for grp in (
-            (_DEFS.BRANCH,),
-            (_DEFS.OPERATION,),
-            (_DEFS.AHEAD, _DEFS.BEHIND),
-            (_DEFS.STAGED, _DEFS.CONFLICTS),
-            (_DEFS.CHANGED, _DEFS.DELETED),
-            (_DEFS.UNTRACKED, _DEFS.STASHED),
-            (_DEFS.LINES_ADDED, _DEFS.LINES_REMOVED),
+            (gs.gs_branch,),
+            (gs.gs_operations,),
+            (gs.gs_ahead, gs.gs_behind),
+            (gs.gs_staged, gs.gs_conflicts),
+            (gs.gs_changed, gs.gs_deleted),
+            (gs.gs_untracked, gs.gs_stash_count),
+            (gs.gs_lines_added, gs.gs_lines_removed),
         ):  # each group appears inside a separator
             val = "".join(gather_group(*grp))
             if val:
                 yield val
 
     def get_color():
-        if fields[_DEFS.CONFLICTS]:
+        if FLDS.pick(gs.gs_conflicts):
             return Colors.ORANGE
         if any(
-            map(lambda x: fields[x], [_DEFS.CHANGED, _DEFS.DELETED, _DEFS.UNTRACKED])
+            map(lambda x: FLDS.pick(x), [gs.gs_changed, gs.gs_deleted, gs.gs_untracked])
         ):
             return Colors.PINK
 
