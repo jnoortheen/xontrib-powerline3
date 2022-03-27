@@ -1,4 +1,3 @@
-import contextlib
 import functools
 import os
 import re
@@ -85,7 +84,7 @@ def set__pl_defaults():
 @functools.lru_cache
 def poetry_env_naming():
     # if using poetry's venv naming scheme like <venv-name>-<hash>-py<ver>
-    return re.compile(r"(?P<name>\S+)-\w+-py(?P<version>[\d.]+)")
+    return re.compile(r"\(?(?P<name>\S+)-\w+-+py(?P<version>[\d.]+)\)?")
 
 
 @add_pl_field
@@ -94,7 +93,7 @@ def full_env_name():
     - `.venv` show the name of the parent folder
     - contains `-py3.*` (when it is poetry created) shows the project name part alone
     """
-    env_name: str = FLDS["env_name"]()
+    env_name: str = FLDS.pick("env_name")
     if not env_name:
         return
 
@@ -192,7 +191,7 @@ def gitstatus():
     from xonsh.prompt import gitstatus as gs
 
     try:
-        gs_dir = FLDS.pick("gs_dir")
+        gs_dir = FLDS.pick(gs.repo_path)
     except Exception:
         gs_dir = None
 
@@ -208,7 +207,7 @@ def gitstatus():
 
     def gather_group(*flds):
         for fld in flds:
-            if fld.name not in fields:
+            if fld.name.replace("gitstatus", "", 1) not in fields:
                 continue
             val = FLDS.pick(fld)
 
@@ -219,24 +218,22 @@ def gitstatus():
 
     def get_parts():
         for grp in (
-            (gs.gs_branch,),
-            (gs.gs_operations,),
-            (gs.gs_ahead, gs.gs_behind),
-            (gs.gs_staged, gs.gs_conflicts),
-            (gs.gs_changed, gs.gs_deleted),
-            (gs.gs_untracked, gs.gs_stash_count),
-            (gs.gs_lines_added, gs.gs_lines_removed),
+            (gs.branch,),
+            (gs.operations,),
+            (gs.ahead, gs.behind),
+            (gs.staged, gs.conflicts),
+            (gs.changed, gs.deleted),
+            (gs.untracked, gs.stash_count),
+            (gs.lines_added, gs.lines_removed),
         ):  # each group appears inside a separator
             val = "".join(gather_group(*grp))
             if val:
                 yield val
 
     def get_color():
-        if FLDS.pick(gs.gs_conflicts):
+        if FLDS.pick(gs.conflicts):
             return Colors.ORANGE
-        if any(
-            map(lambda x: FLDS.pick(x), [gs.gs_changed, gs.gs_deleted, gs.gs_untracked])
-        ):
+        if any(map(lambda x: FLDS.pick(x), [gs.changed, gs.deleted, gs.untracked])):
             return Colors.PINK
 
         return Colors.GREEN  # clean
