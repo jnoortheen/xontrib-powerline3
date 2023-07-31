@@ -97,15 +97,16 @@ def full_env_name():
     if not env_name:
         return
 
-    venv_path = Path(env.get("VIRTUAL_ENV"))
-    if venv_path.name == ".venv":
-        env_name = venv_path.parent.name
-
     sep = "\0"
-    if match := poetry_env_naming().match(venv_path.name):
-        name, version = match.groups()
-        env_name = sep.join([name, version])
+    if venv := env.get("VIRTUAL_ENV"):
+        venv_path = Path(venv)
+        if venv_path.name == ".venv":
+            env_name = venv_path.parent.name
 
+        if match := poetry_env_naming().match(venv_path.name):
+            name, version = match.groups()
+            env_name = sep.join([name, version])
+    
     return RichField(env_name, Colors.EMERALD, sep)
 
 
